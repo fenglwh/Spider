@@ -2,23 +2,23 @@
 # coding:utf-8
 __Author__ = 'Adair.l'
 import multiprocessing
-import threading
 import psutil
 import os
 import urllib.request
-import time
 import bs4
 import threadpool
 class Spider():
     def __init__(self):
         self.store_path=''
-        self.timeout=10
-        self.thread_count=3
+        self.timeout=20
+        self.thread_count=5
+        self.process_count=8
+        # self.process_count=psutil.cpu_count()
 
     def working(self):
         pass
 
-    def retrieve(self,url,path):
+    def retrieve(self,url,path,retried=0):
         print("retrieve:",url)
         header = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:53.0) Gecko/20100101 Firefox/53.0", }
@@ -32,17 +32,19 @@ class Spider():
             open(path, 'wb').write(urllib.request.urlopen(req, timeout=self.timeout).read())
         except Exception as e:
             if "timeout" in str(e).lower():
-                try:
-                    os.remove(path)
-                except:
-                    pass
                 print(e)
             else:
                 print(e)
+            try:
+                os.remove(path)
+            except:
+                pass
+            if not retried:
+                self.retrieve(url,path,1)
 
     def retrieve_imgs(self,urls):
         print("retrieve imgs")
-        tp=threadpool.ThreadPool(5)
+        tp=threadpool.ThreadPool(self.thread_count)
         for index,url in enumerate(urls):
             path= os.path.join(self.store_path,str(index)+".jpg" if len(os.path.splitext(url))>1 else os.path.splitext(url)[1])
             reqs=threadpool.makeRequests(self.retrieve,[((url,path),{})])
@@ -60,7 +62,7 @@ class Spider():
         self.retrieve_imgs(pics)
 
     def get_pages(self,url_and_paths):
-        pool=multiprocessing.Pool(processes=psutil.cpu_count()*4)
+        pool=multiprocessing.Pool(processes=self.process_count)
         for url,store_path in url_and_paths:
             pool.apply_async(self.get_page,(url,store_path))
         pool.close()
@@ -69,6 +71,6 @@ class Spider():
 
 if __name__ == '__main__':
     s=Spider()
-    s.get_pages([("http://www.meizitu.com/a/5591.html","mzt/1")])
-    # s.store_path='mzt/1'
-    # s.retrieve_imgs(['http://mm.chinasareview.com/wp-content/uploads/2017a/08/02/01.jpg', 'http://mm.chinasareview.com/wp-content/uploads/2017a/08/02/02.jpg', 'http://mm.chinasareview.com/wp-content/uploads/2017a/08/02/03.jpg', 'http://mm.chinasareview.com/wp-content/uploads/2017a/08/02/04.jpg', 'http://mm.chinasareview.com/wp-content/uploads/2017a/08/02/05.jpg', 'http://mm.chinasareview.com/wp-content/uploads/2017a/08/02/06.jpg', 'http://mm.chinasareview.com/wp-content/uploads/2017a/08/02/07.jpg', 'http://mm.chinasareview.com/wp-content/uploads/2017a/08/02/08.jpg', 'http://mm.chinasareview.com/wp-content/uploads/2017a/08/02/09.jpg', 'http://mm.chinasareview.com/wp-content/uploads/2017a/08/02/10.jpg'])
+    s.get_pages([("http://www.meizitu.com/a/{}.html".format(x),"mzt/{}".format(x)) for x in range(3525,6000)])
+
+
