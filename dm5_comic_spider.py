@@ -52,6 +52,6 @@ class Spider:
 
 if __name__ == '__main__':
     s = Spider()
-    s.store_path = "comic/女子学院的男生"
+    s.store_path = "comic/英雄我早就不当了"
     s.page_index=1
-    s.get_page(r"http://cnc.dm5.com/m495477/")
+    s.get_page(r"http://www.1kkk.com/ch1-441730/")
