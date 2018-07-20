@@ -34,25 +34,24 @@ class Spider:
             }
             print('getting:',pic)
             response = requests.get(pic,headers=headers)
-            print(response)
             path = os.path.join(self.store_path, str(self.page_index),str(self.img_index)) + ('.jpg' if response.headers[
                                                                                  'Content-Type'] == 'image/jpeg' else ".unknow")
-            print(path)
             open(path, 'wb').write(response.content)
             self.img_index += 1
         self.page_index += 1
         self.img_index = 1
-        next_page = [x for x in bs.select("html > body.white > div.view-paging > div.container > a.block") if x.text == '下一章'][
-            0].attrs['href']
-        if 'javascript:ShowEnd();' not in next_page:
-            split_result = urllib.parse.urlsplit(url)
-            split_result_list = list(split_result)
-            split_result_list[2] = next_page
-            self.get_page(urllib.parse.urlunsplit(split_result_list))
+        next_pages = [x for x in bs.select("html > body.white > div.view-paging > div.container > a.block") if x.text == '下一章']
+        if next_pages:
+            next_page=next_pages[0].attrs['href']
+            if 'javascript:ShowEnd();' not in next_page:
+                split_result = urllib.parse.urlsplit(url)
+                split_result_list = list(split_result)
+                split_result_list[2] = next_page
+                self.get_page(urllib.parse.urlunsplit(split_result_list))
 
 
 if __name__ == '__main__':
     s = Spider()
-    s.store_path = "comic/绿茶婊气运师"
+    s.store_path = "comic/女子学院的男生"
     s.page_index=1
-    s.get_page(r"http://cnc.dm5.com/m575919/")
+    s.get_page(r"http://cnc.dm5.com/m495477/")
